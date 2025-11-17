@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Package files
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# SLURM outputs
+*.slurm
+*.out
+*.err
+
+# Data files (usually too large for GitHub)
+*.txt
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+
+# Logs
+*.log
+logfile.txt
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (usually too large)
+*.bin
+*.safetensors
+*.ckpt
+*.pth
+
+# Temporary files
+*.tmp
+*.temp 
