@@ -21,7 +21,10 @@ build/
 *.err
 
 # Data files (usually too large for GitHub)
-*.txt
+chembl_33.csv
+random_smiles.jsonl
+chembl_random_smiles.txt
+*.jsonl
 *.csv
 *.png
 *.jpg
