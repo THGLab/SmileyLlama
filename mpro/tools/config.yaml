@@ -1,0 +1,10 @@
+rewards:
+  - type: docking
+    weight: 1
+    params:
+      protein_file: /path/to/Mpro_7L11.pdb
+      box: [-33, -15, -41, -9, 9, -17]
+      protocols: ["vina-gpu"]
+      timeout: 45
+run:
+  random_seed: 42
