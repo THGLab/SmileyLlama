@@ -42,7 +42,6 @@ fastcore==1.5.54
 ffmpy==0.3.2
 filelock==3.15.4
 fire==0.6.0
-flash-attn==2.6.2
 fonttools==4.53.1
 frozenlist==1.4.1
 fschat @ git+https://github.com/lm-sys/FastChat.git@27a05b04a35510afb1d767ae7e5990cbd278f8fe
