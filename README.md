@@ -24,8 +24,9 @@ Make sure to have `python 3.10.12`, `gcc 11.4.0` and `cuda 11.8.0` or compatible
 cd envs
 python -m venv axo
 source axo/bin/activate
-pip install packaging wheel
+pip install packaging wheel psutil
 pip install torch==2.3.1
+pip install flash-attn==2.6.2 --no-build-isolation
 pip install -r axo-requirements.txt
 ```
 
@@ -33,7 +34,7 @@ pip install -r axo-requirements.txt
 Make sure to have `python 3.10.12`, `gcc 11.4.0` and `cuda 11.8.0` or compatible versions
 ```
 cd envs
-python -m venv ana-env
+python -m venv ana-env --python=python3.11.12
 source ana-env/bin/activate
 pip install packaging wheel
 pip install torch==2.3.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html

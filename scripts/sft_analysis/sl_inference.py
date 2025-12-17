@@ -1,6 +1,6 @@
 '''
 This runs Llama or SmileyLlama in parallel using accelerate. 
-Make sure to run with the appropriate env (ana-env works great)
+Make sure to run with the appropriate env (axo works great)
 Run this (and files that use InferenceObject) using accelerate launch program.py
 '''
 import torch
