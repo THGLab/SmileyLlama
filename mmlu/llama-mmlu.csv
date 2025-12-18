@@ -1,0 +1,63 @@
+category,accuracy,std_error
+MMLU,0.6796,0.0038
+Humanities,0.6431,0.0067
+Formal Logic,0.4683,0.0446
+High School European History,0.7576,0.0335
+High School Us History,0.8431,0.0255
+High School World History,0.8523,0.0231
+International Law,0.8264,0.0346
+Jurisprudence,0.7778,0.0402
+Logical Fallacies,0.8037,0.0312
+Moral Disputes,0.7428,0.0235
+Moral Scenarios,0.5754,0.0165
+Philosophy,0.7203,0.0255
+Prehistory,0.7469,0.0242
+Professional Law,0.5039,0.0128
+World Religions,0.8304,0.0288
+Other,0.7441,0.0075
+Business Ethics,0.69,0.0465
+Clinical Knowledge,0.7925,0.025
+College Medicine,0.6879,0.0353
+Global Facts,0.4,0.0492
+Human Aging,0.704,0.0306
+Management,0.8252,0.0376
+Marketing,0.8932,0.0202
+Medical Genetics,0.78,0.0416
+Miscellaneous,0.8442,0.013
+Nutrition,0.7582,0.0245
+Professional Accounting,0.5496,0.0297
+Professional Medicine,0.7794,0.0252
+Virology,0.512,0.0389
+Social Sciences,0.7709,0.0074
+Econometrics,0.5263,0.047
+High School Geography,0.798,0.0286
+High School Government And Politics,0.8808,0.0234
+High School Macroeconomics,0.6769,0.0237
+High School Microeconomics,0.7941,0.0263
+High School Psychology,0.8624,0.0148
+Human Sexuality,0.8092,0.0345
+Professional Psychology,0.7173,0.0182
+Public Relations,0.6727,0.0449
+Security Studies,0.751,0.0277
+Sociology,0.8507,0.0252
+Us Foreign Policy,0.87,0.0338
+STEM,0.5814,0.0084
+Abstract Algebra,0.34,0.0476
+Anatomy,0.6815,0.0402
+Astronomy,0.7632,0.0346
+College Biology,0.7986,0.0335
+College Chemistry,0.47,0.0502
+College Computer Science,0.56,0.0499
+College Mathematics,0.36,0.0482
+College Physics,0.4314,0.0493
+Computer Security,0.75,0.0435
+Conceptual Physics,0.5957,0.0321
+Electrical Engineering,0.6483,0.0398
+Elementary Mathematics,0.4921,0.0257
+High School Biology,0.8065,0.0225
+High School Chemistry,0.6355,0.0339
+High School Computer Science,0.73,0.0446
+High School Mathematics,0.4111,0.03
+High School Physics,0.4437,0.0406
+High School Statistics,0.537,0.034
+Machine Learning,0.4643,0.0473
