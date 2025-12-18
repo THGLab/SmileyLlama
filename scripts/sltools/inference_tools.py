@@ -1,7 +1,6 @@
 import torch
 import transformers
-from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaForCausalLM, BitsAndBytesConfig
-import bitsandbytes, flash_attn
+from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaForCausalLM
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 

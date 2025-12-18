@@ -41,6 +41,7 @@ pip install torch==2.3.1+cu118 -f https://download.pytorch.org/whl/torch_stable.
 pip install -r ana-env-requirements.txt
 cd ../scripts
 pip install -e .
+python -m ipykernel install --user --name=ana-env
 ```
 
 Also, remember to create kernels for use in jupyter notebooks.
@@ -72,10 +73,15 @@ wget -O chembl_33.csv https://ndownloader.figshare.com/files/60278831
 ```
 To create new datasets with random smiles, use the `chembl_random_smiles.txt` and `random_smiles.jsonl` files, use the `make_sft_data.ipynb` notebook.
 
-`sft/8b-lora32` contains the config file used for axolotl to fine-tune. To restart fine-tuning, modify the paths in this file to specify where the data resides, and where the outputs and prepared data should be saved. Then, preprocess, begin fine-tuning, and merge the LoRA into the weights with
+`sft/8b-lora32` contains the config file used for axolotl to fine-tune. To restart fine-tuning, you'll need to fist gain access to Llama. You can do this by first pasting your huggingface access token after requesting access to Llama through your account, or acquiring Llama from another source, then specifying the path to the Llama weights instead of `meta-llama/Llama-3.1-8B-Instruct` in the first line. Then, preprocess, begin fine-tuning, and merge the LoRA into the weights.
 ```
+# Export HuggingFace Token to download Llama (or modify the path to point to the weights)
+export HF_TOKEN=<Your HuggingFace Token>
+# Preprocess the data
 CUDA_VISIBLE_DEVICES="" python3 -m axolotl.cli.preprocess cf_lora.yml
+# Begin fine-tuning
 srun accelerate launch -m axolotl.cli.train cf_lora.yml
+# Merge the LoRA into the weights. The new, fine-tuned models' weights will be in `sft/outputs/merged`
 python3 -m axolotl.cli.merge_lora $(pwd)/cf_lora.yml --lora_model_dir="$(pwd)/outputs"
 ```
 
