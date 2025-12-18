@@ -15,11 +15,11 @@ Inference on SmileyLlama should not be done on a GPU with less than 16 GB VRAM. 
 
 
 # Installation Guide
-A few environments are required to be able to replicate the work in SmileyLlama, including finetuning the models.
+A few environments are required to be able to replicate the work in SmileyLlama, including finetuning the models. You will also need environments available to perform guacamol analysis, PLIP, and iMiner.
 
+Make sure to have `python 3.10`, and CUDA version 11 or 12 (tested on 11.8 and 12.2) installed. Python 3.10 can be found at [python's website](https://www.python.org/downloads/release/python-31011/) and version management can be done with [pyenv](https://github.com/pyenv/pyenv). You can find also download cuda 11.8.0 [`here`](https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux).
 
 ### axo (use for fine-tuning)
-Make sure to have `python 3.10`, and CUDA version 11 or 12 (tested on 11.8 and 12.2) installed.
 ```
 cd envs
 python -m venv axo
@@ -31,7 +31,6 @@ pip install -r axo-requirements.txt
 ```
 
 ### ana-env (main environment for analysis)
-Make sure to have `python 3.10.12`, `gcc 11.4.0` and `cuda 11.8.0` or compatible versions
 ```
 cd envs
 python -m venv ana-env
