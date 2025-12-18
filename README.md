@@ -19,7 +19,7 @@ A few environments are required to be able to replicate the work in SmileyLlama,
 
 
 ### axo (use for fine-tuning)
-Make sure to have `python 3.10.12`, `gcc 11.4.0` and `cuda 11.8.0` or compatible versions
+Make sure to have `python 3.10`, and CUDA version 11 or 12 (tested on 11.8 and 12.2) installed.
 ```
 cd envs
 python -m venv axo
@@ -34,7 +34,7 @@ pip install -r axo-requirements.txt
 Make sure to have `python 3.10.12`, `gcc 11.4.0` and `cuda 11.8.0` or compatible versions
 ```
 cd envs
-python -m venv ana-env --python=python3.11.12
+python -m venv ana-env
 source ana-env/bin/activate
 pip install packaging wheel
 pip install torch==2.3.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
@@ -63,6 +63,14 @@ lm_eval --model=hf --model_args="pretrained=/path/to/model" --tasks=wikitext
 ```
 
 ### sft
+You can download the necessary data for this section from [figshare](https://figshare.com/articles/dataset/SFT_Data_for_SmileyLlama/30854573) in the sft directory with the following commands:
+```
+cd sft
+wget -O random_smiles.jsonl https://ndownloader.figshare.com/files/60278828
+wget -O chembl_random_smiles.txt https://ndownloader.figshare.com/files/60278825
+wget -O chembl_33.csv https://ndownloader.figshare.com/files/60278831
+```
+To create new datasets with random smiles, use the `chembl_random_smiles.txt` and `random_smiles.jsonl` files, use the `make_sft_data.ipynb` notebook.
 
 `sft/8b-lora32` contains the config file used for axolotl to fine-tune. To restart fine-tuning, modify the paths in this file to specify where the data resides, and where the outputs and prepared data should be saved. Then, preprocess, begin fine-tuning, and merge the LoRA into the weights with
 ```
