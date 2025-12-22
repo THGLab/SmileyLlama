@@ -24,7 +24,6 @@ build/
 chembl_33.csv
 random_smiles.jsonl
 chembl_random_smiles.txt
-*.jsonl
 *.png
 *.jpg
 *.jpeg
