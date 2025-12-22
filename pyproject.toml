@@ -19,7 +19,6 @@ authors = [
 dependencies = [
   "numpy",
   "pandas",
-  "pytest",
   "rdkit",
   "ruamel.yaml",
   "meeko==0.7.1",
@@ -33,6 +32,12 @@ classifiers = [
 
 [project.scripts]
 sl = "smileyllama.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

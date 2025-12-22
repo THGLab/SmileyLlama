@@ -1,4 +1,5 @@
 import pytest
+pytestmark = pytest.mark.ci
 from rdkit import Chem
 from smileyllama.score import *
 from smileyllama.filter import NumericScoreFilter

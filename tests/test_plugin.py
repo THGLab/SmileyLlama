@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.ci
 import os
 from smileyllama.plugin import load_module_from_file
 from smileyllama.score import REGISTRY

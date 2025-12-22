@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.ci
 import os
 from rdkit import Chem
 from smileyllama.score import REGISTRY
