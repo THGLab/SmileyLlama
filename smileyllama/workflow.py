@@ -15,6 +15,7 @@ from .score import REGISTRY, aggregate
 from .inference import Pipeline
 from .train import make_dpo_data_from_scores
 from .utils import modify_yaml
+from .plugin import load_module_from_file
 
 
 class NormalizerConfig(BaseModel):
@@ -51,6 +52,7 @@ class WorkflowConfig(BaseModel):
     nprocs: int = -1
     remove_iter_model: bool = False
     log_level: Literal['info', 'debug'] = 'info'
+    plugin: str = ''
 
     # Sample
     num_samples_per_iter: int = 1000
@@ -114,7 +116,12 @@ class Workflow:
         with open(self.directory / 'config.json', 'w') as f:
             f.write(self.config.model_dump_json(indent=2))
         
+        # Logging
         self.init_logger()
+
+        # Plugin
+        if self.config.plugin:
+            load_module_from_file(self.config.plugin)
     
     def init_logger(self):
         log_file = str(self.directory / 'workflow.log')
@@ -133,6 +140,7 @@ class Workflow:
 
         logger.addHandler(console_handler)
         logger.addHandler(file_handler)
+        logger.propagate = False
         self.logger = logger
         self.log_file = log_file
             

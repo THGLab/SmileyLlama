@@ -5,6 +5,14 @@ from ruamel.yaml import YAML
 from .score import Score
 
 
+def safe_read_yaml(path: os.PathLike):
+    ry = YAML(typ="safe")
+    ry.allow_duplicate_keys = False
+    with open(path) as f:
+        data = ry.load(f)
+    return data
+
+
 def modify_yaml(old_path: os.PathLike, new_path: os.PathLike, args: Dict[str, Any]):
     ry = YAML()
     ry.preserve_quotes = True
