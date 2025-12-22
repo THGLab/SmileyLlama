@@ -4,7 +4,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "smileyllama"  # pip install 时使用的名称
+name = "smileyllama"
 version = "0.2.0"
 description = "SmileyLlama: Modifying Large Language Models for Directed Chemical Space Exploration"
 readme = "README.md"
