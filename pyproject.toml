@@ -21,6 +21,7 @@ dependencies = [
   "pydantic",
   "numpy",
   "pandas",
+  "scipy",
   "rdkit",
   "ruamel.yaml",
   "meeko==0.7.1",
