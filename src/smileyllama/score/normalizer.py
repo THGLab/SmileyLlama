@@ -141,13 +141,16 @@ class Negate(Normalizer):
 class MinMaxNormalizer(Normalizer):
     """Min-max normalizer that scales data to ``[0, 1]`` range.
     
-    Clips data to optional min/max bounds, then normalizes to ``[0, 1]`` range
-    based on the actual min/max of the clipped data. i.e. the transform is given by
+    Clips data to optional min/max bounds (if provided), then normalizes to ``[0, 1]`` range.
+    The normalization uses the provided bounds if specified, otherwise uses the actual
+    min/max of the clipped data. The transform is given by:
 
     .. code-block:: python
 
-        X_clip = clip(X, min, max)
-        X_norm = (X_clip - min) / (max - min) 
+        X_clip = clip(X, vmin, vmax)  # No clipping if vmin/vmax is None
+        vmin_norm = vmin if vmin is not None else nanmin(X_clip)
+        vmax_norm = vmax if vmax is not None else nanmax(X_clip)
+        X_norm = (X_clip - vmin_norm) / (vmax_norm - vmin_norm)
 
     """
     def __init__(self, vmin: Optional[float] = None, vmax: Optional[float] = None, negate: bool = False):
@@ -181,8 +184,10 @@ class MinMaxNormalizer(Normalizer):
     def transform(self, data: np.ndarray) -> np.ndarray:
         """Normalize data to ``[0, 1]`` range.
         
-        Clips data to ``[vmin, vmax]`` if provided, then normalizes to ``[0, 1]``
-        based on the min/max of the clipped data.
+        First clips data to ``[vmin, vmax]`` if provided (no clipping if None).
+        Then determines normalization bounds: uses provided ``vmin``/``vmax`` if specified,
+        otherwise uses the actual min/max (computed with ``np.nanmin``/``np.nanmax``) of
+        the clipped data. Finally normalizes using these bounds.
         
         Parameters
         ----------
@@ -194,9 +199,10 @@ class MinMaxNormalizer(Normalizer):
         numpy.ndarray
             Normalized data in ``[0, 1]`` range (or ``[1, 0]`` if ``negate=True``).
         """
-        data_transformed = np.clip(data, self.vmin, self.vmax)
-        data_range = np.nanmax(data_transformed) - np.nanmin(data_transformed)
-        data_transformed = (data_transformed - np.nanmin(data_transformed)) / data_range
+        data_clipped = np.clip(data, self.vmin, self.vmax)
+        vmin = np.nanmin(data_clipped) if self.vmin is None else self.vmin
+        vmax = np.nanmax(data_clipped) if self.vmax is None else self.vmax
+        data_transformed = (data_clipped - vmin) / (vmax - vmin)
         return data_transformed if not self.negate else 1 - data_transformed
 
 
