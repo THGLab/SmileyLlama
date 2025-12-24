@@ -5,7 +5,7 @@ import multiprocessing as mp
 import subprocess
 import logging
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 import numpy as np
 import pandas as pd
 import torch
@@ -19,53 +19,61 @@ from .plugin import load_module_from_file
 
 
 class NormalizerConfig(BaseModel):
-    name: str = 'Identity'
-    parameters: Dict[str, Any] = dict()
+    """Configuration for a normalizer."""
+    name: str = Field(default='Identity', description="Name of the normalizer class (must be registered in the normalizer registry).")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters to pass to the normalizer constructor.")
 
 
 class ScoreConfig(BaseModel):
-    name: str
-    parameters: Dict[str, Any] = dict()
-    start_iter: int = 0
-    end_iter: int = -1
-    normalizer: NormalizerConfig
-    weight: float = 1.0
-    as_filter: bool = False
-    dependencies: List[str] = list()
+    """Configuration for a score in the workflow."""
+    name: str = Field(description="Name of the score class (must be registered in the score registry).")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters to pass to the score constructor.")
+    start_iter: int = Field(default=0, description="First iteration where this score is active (0-indexed).")
+    end_iter: int = Field(default=-1, description="Last iteration where this score is active. If -1, active until end.")
+    normalizer: NormalizerConfig = Field(description="Normalizer configuration to apply to raw scores.")
+    weight: float = Field(default=1.0, description="Weight for score aggregation.")
+    as_filter: bool = Field(default=False, description="If True, treat as binary filter (0/1) rather than numeric score. The binary filters will pass its score as binary_scores in aggregate(), which will zero-out all the other scores if it is False.")
+    dependencies: List[str] = Field(default_factory=list, description="List of score names that this score depends on.")
 
 
 class RLConfig(BaseModel):
-    algorithm: Literal['dpo'] = 'dpo'
-    config_file: str
-    dpo_num_pairs_per_smiles: int = 8
-    dpo_score_margin: float = 0.1
-    dpo_use_random_smiles: bool = False
-    axo_extra_configs: Dict[str, Any] = dict()
-    axo_launcher_configs: Dict[str, Any] = dict()
+    """Configuration for reinforcement learning (RL) training."""
+    algorithm: Literal['dpo'] = Field(default='dpo', description="RL algorithm to use. Currently only 'dpo' (Direct Preference Optimization) is supported.")
+    config_file: str = Field(description="Path to base Axolotl configuration file.")
+    dpo_num_pairs_per_smiles: int = Field(default=8, description="Number of (chosen, rejected) pairs to generate per SMILES string.")
+    dpo_score_margin: float = Field(default=0.1, description="Minimum score difference required to create a pair.")
+    dpo_use_random_smiles: bool = Field(default=False, description="If True, use random SMILES representations instead of the model direct outputs.")
+    axo_extra_configs: Dict[str, Any] = Field(default_factory=dict, description="Additional Axolotl configuration parameters.")
+    axo_launcher_configs: Dict[str, Any] = Field(default_factory=dict, description="Axolotl launcher configuration parameters.")
     
 
 class WorkflowConfig(BaseModel):
-    directory: str
-    niters: int
-    model_path: str
-    lora_model_path: str = ''
-    nprocs: int = -1
-    remove_iter_model: bool = False
-    log_level: Literal['info', 'debug'] = 'info'
-    plugin: str = ''
+    """Configuration for the SmileyLlama workflow.
+    
+    Defines all parameters for running the iterative RL workflow including
+    sampling, scoring, and training steps.
+    """
+    directory: str = Field(description="Base directory for workflow output files.")
+    niters: int = Field(description="Number of iterations to run.")
+    model_path: str = Field(description="Base language model (path or HuggingFace format).")
+    lora_model_path: str = Field(default='', description="Path to LoRA adapter weights for initial iteration.")
+    nprocs: int = Field(default=-1, description="Number of processes for parallel computation. If -1, ``uses multiprocessing.cpu_count() - 2``.")
+    remove_iter_model: bool = Field(default=False, description="If True, remove merged models from previous iterations to save space.")
+    log_level: Literal['info', 'debug'] = Field(default='info', description="Logging level.")
+    plugin: str = Field(default='', description="Path to Python plugin file to load.")
 
     # Sample
-    num_samples_per_iter: int = 1000
-    system_prompt: str = 'You love and excel at generating SMILES strings of drug-like molecules'
-    user_prompt_base: str = 'Output a SMILES string for a drug like molecule'
-    user_prompt_properties: List[str] = list()
-    prompt_format: Literal['instruct', 'chat'] = 'instruct'
+    num_samples_per_iter: int = Field(default=1000, description="Number of SMILES strings to generate per iteration.")
+    system_prompt: str = Field(default='You love and excel at generating SMILES strings of drug-like molecules', description="System prompt for generation.")
+    user_prompt_base: str = Field(default='Output a SMILES string for a drug like molecule', description="Base user prompt.")
+    user_prompt_properties: List[str] = Field(default_factory=list, description="List of property strings to include in prompts.")
+    prompt_format: Literal['instruct', 'chat'] = Field(default='instruct', description="Prompt format for generation.")
 
     # Scoring
-    scores: Dict[str, ScoreConfig] = dict()
+    scores: Dict[str, ScoreConfig] = Field(default_factory=dict, description="Dictionary mapping score names to their configurations.")
 
     # RL
-    rl_config: RLConfig
+    rl_config: RLConfig = Field(description="Reinforcement learning configuration.")
 
     @field_validator("scores")
     @classmethod
@@ -78,12 +86,34 @@ class WorkflowConfig(BaseModel):
 
 
 def _tag_done(dir):
+    """Create a ``done.tag`` file to mark a workflow stage as complete.
+    
+    Parameters
+    ----------
+    dir : str or os.PathLike
+        Directory where the done.tag file should be created.
+    """
     fp = open(os.path.join(dir, 'done.tag'), 'w')
     fp.close()
 
 
 class Workflow:
+    """Main workflow class for iterative RL-based molecular generation.
+    
+    Executes an iterative pipeline of: (1) sample molecules, (2) score them,
+    (3) train RL model. Handles resumption from checkpoints and manages all intermediate files and directories.
+    """
     def __init__(self, config: WorkflowConfig):
+        """Initialize the workflow.
+        
+        Sets up directories, logging, and determines which steps to run
+        based on existing checkpoint files.
+        
+        Parameters
+        ----------
+        config : WorkflowConfig
+            Workflow configuration object.
+        """
         self.config = config
         self.directory = Path(config.directory)
         self.directory.mkdir(exist_ok=True)
@@ -124,6 +154,11 @@ class Workflow:
             load_module_from_file(self.config.plugin)
     
     def init_logger(self):
+        """Initialize logging for the workflow.
+        
+        Sets up both console and file logging with appropriate formatters.
+        Log file is written to ``workflow.log`` in the workflow directory.
+        """
         log_file = str(self.directory / 'workflow.log')
         log_level = logging.DEBUG if self.config.log_level == 'debug' else logging.INFO 
         logger = logging.getLogger('workflow')
@@ -145,41 +180,149 @@ class Workflow:
         self.log_file = log_file
             
     def run(self):
+        """Run the workflow.
+        
+        Executes all remaining workflow steps in sequence. Steps are
+        determined at initialization based on checkpoint status.
+        """
         for step in self.steps:
             step()
 
     def log(self, msg: str):
+        """Log a message.
+        
+        Parameters
+        ----------
+        msg : str
+            Message to log.
+        """
         print(msg)
     
     def update_iter(self):
+        """Increment the current iteration counter."""
         self.iter += 1
 
     def _is_sample_done(self, it: Optional[int] = None):
+        """Check if sampling stage is complete for an iteration.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        bool
+            True if done.tag exists in sample directory.
+        """
         done_tag = self.get_sample_dir(it) / 'done.tag'
         return done_tag.is_file()
     
     def _is_score_done(self, it: Optional[int] = None):
+        """Check if scoring stage is complete for an iteration.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        bool
+            True if done.tag exists in score directory.
+        """
         done_tag = self.get_score_dir(it) / 'done.tag'
         return done_tag.is_file()
     
     def _is_rl_done(self, it: Optional[int] = None):
+        """Check if RL training stage is complete for an iteration.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        bool
+            True if done.tag exists in RL directory.
+        """
         done_tag = self.get_rl_dir(it) / 'done.tag'
         return done_tag.is_file()
     
     def get_iter_dir(self, it: Optional[int] = None):
+        """Get directory path for an iteration.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        Path
+            Path to iteration directory (e.g., "iter.0").
+        """
         it = self.iter if it is None else it
         return self.directory / f'iter.{it}'
 
     def get_sample_dir(self, it: Optional[int] = None):
+        """Get directory path for sampling stage.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        Path
+            Path to sample directory (e.g., "iter.0/01.sample").
+        """
         return self.get_iter_dir(it) / '01.sample'
 
     def get_score_dir(self, it: Optional[int] = None):
+        """Get directory path for scoring stage.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        Path
+            Path to score directory (e.g., "iter.0/02.score").
+        """
         return self.get_iter_dir(it) / '02.score'
     
     def get_rl_dir(self, it: Optional[int] = None):
+        """Get directory path for RL training stage.
+        
+        Parameters
+        ----------
+        it : int, optional
+            Iteration number. If None, uses current iteration.
+        
+        Returns
+        -------
+        Path
+            Path to RL directory (e.g., "iter.0/03.rl").
+        """
         return self.get_iter_dir(it) / '03.rl'
 
     def init_scores(self):
+        """Initialize score instances for the current iteration.
+        
+        Creates score and normalizer instances based on configuration,
+        sets up working directories and dependencies, and filters scores
+        based on start_iter and end_iter settings.
+        
+        Returns
+        -------
+        dict of str to tuple of (Score, Normalizer)
+            Dictionary mapping score names to (score, normalizer) tuples.
+        """
         scores = {}
         for tag, score_config in self.config.scores.items():
             start = score_config.start_iter
@@ -203,6 +346,12 @@ class Workflow:
         return scores
     
     def run_scores(self):
+        """Run the scoring stage for the current iteration.
+        
+        Loads unique SMILES from sampling stage, computes all active scores,
+        applies normalizers, aggregates scores, and saves results to CSV.
+        Logs statistics for each score.
+        """
         self.logger.info(f"##### Iter {self.iter} : Score #####")
         stage_dir = self.get_score_dir()
         stage_dir.mkdir(exist_ok=True, parents=True)
@@ -254,6 +403,13 @@ class Workflow:
         _tag_done(stage_dir)
     
     def run_sample(self):
+        """Run the sampling stage for the current iteration.
+        
+        Generates SMILES strings using the language model pipeline,
+        saves all results and unique results to CSV files, and writes
+        unique SMILES to a text file. Uses model from previous iteration
+        if available, otherwise uses base model.
+        """
         self.logger.info(f"##### Iter {self.iter} : Sample #####")
         stage_dir = self.get_sample_dir()
         stage_dir.mkdir(exist_ok=True, parents=True)
@@ -293,6 +449,22 @@ class Workflow:
         _tag_done(stage_dir)
     
     def make_rl_dataset(self):
+        """Create DPO training dataset from scored SMILES.
+        
+        Reads scores from scoring stage, pairs SMILES based on score
+        differences, and generates DPO training data using
+        :func:`~smileyllama.train.make_dpo_data_from_scores`.
+        
+        Returns
+        -------
+        Path
+            Path to the generated dataset.jsonl file.
+        
+        Raises
+        ------
+        AssertionError
+            If no DPO pairs can be generated (all scores are identical).
+        """
         df = pd.read_csv(str(self.get_score_dir() / 'score.csv'))
         dataset = self.get_rl_dir() / 'dataset.jsonl'
         col = 'random_smiles' if self.config.rl_config.dpo_use_random_smiles else 'smiles'
@@ -311,7 +483,11 @@ class Workflow:
         return dataset
 
     def run_rl(self):
-        '''Axolotl to run RL'''
+        """Run reinforcement learning training stage.
+        
+        Creates DPO dataset, configures Axolotl training, runs RL training,
+        and merges LoRA weights.
+        """
         self.logger.info(f"##### Iter {self.iter} : RL #####")
         stage_dir = self.get_rl_dir()
         stage_dir.mkdir(exist_ok=True, parents=True)
@@ -368,6 +544,11 @@ class Workflow:
         _tag_done(stage_dir)
 
     def _print_gpu_mem_info(self):
+        """Print GPU memory information for debugging.
+        
+        Logs free, allocated, and reserved memory for all available GPUs.
+        Only logs if CUDA is available and log level is DEBUG.
+        """
         if not torch.cuda.is_available():
             return
         device_count = torch.cuda.device_count()

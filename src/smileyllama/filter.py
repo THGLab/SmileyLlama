@@ -29,29 +29,128 @@ from .score import Score, StepNormalizer, safe_mol_from_smiles
 
 
 class Filter(ABC):
+    """Abstract base class for molecular filters.
+    
+    Filters check whether molecules satisfy certain criteria and can
+    generate prompt strings describing those criteria.
+    """
     def __init__(self, *args, **kwargs):
+        """Initialize the filter.
+        
+        Parameters
+        ----------
+        *args
+            Variable length argument list.
+        **kwargs
+            Arbitrary keyword arguments.
+        """
         ...
 
     @abstractmethod
     def create_prompt(self) -> str:
+        """Create a prompt string describing the filter criteria.
+        
+        Returns
+        -------
+        str
+            Human-readable description of what the filter checks.
+        """
         ...
     
     @abstractmethod
     def apply(self, mol: Chem.Mol) -> bool:
+        """Apply the filter to a molecule.
+        
+        Parameters
+        ----------
+        mol : rdkit.Chem.Mol
+            Molecule to check.
+        
+        Returns
+        -------
+        bool
+            True if molecule passes the filter, False otherwise.
+        """
         ...
 
 
 class BinaryScoreFilter(Filter):
+    """Filter based on binary (0/1) score values.
+    
+    Uses a :class:`~smileyllama.score.base.Score` that returns binary
+    values (0 or 1) to filter molecules. Molecules with score=1 pass,
+    score=0 or NaN fail.
+
+    Attributes
+    ----------
+    score : Score
+        The binary score function used for filtering. Should return 0 (fail) or 1 (pass) for a molecule.
+    name_in_prompt : str
+        The human-readable name or prompt used to describe what this filter checks.
+    """
     def __init__(self, score: Score, name_in_prompt: str = ''):
+        """Initialize binary score filter.
+        
+        Parameters
+        ----------
+        score : Score
+            Score instance that returns binary values (0 or 1).
+        name_in_prompt : str, optional
+            Name to use in prompt generation. If empty, uses score's
+            name_in_prompt attribute if available. Default is ''.
+        
+        Raises
+        ------
+        AssertionError
+            If name_in_prompt is empty and score has no name_in_prompt attribute.
+        """
         self.score = score
         self.name_in_prompt = getattr(score, 'name_in_prompt', '') if not name_in_prompt else name_in_prompt
         assert self.name_in_prompt, f'Must provide an non-empty name_in_prompt argument'
     
     @classmethod
-    def init_from_class(cls, score_cls, name_in_prompt='', **params):
+    def init_from_class(cls, score_cls: type, name_in_prompt: str = '', **params):
+        """Create filter from a score class.
+        
+        Parameters
+        ----------
+        score_cls : type
+            Score class to instantiate.
+        name_in_prompt : str, optional
+            Name for prompt generation. Default is an empty string.
+        **params
+            Parameters to pass to score_cls constructor.
+        
+        Returns
+        -------
+        BinaryScoreFilter
+            Initialized filter instance.
+        """
         return cls(score_cls(**params), name_in_prompt)
     
+    def create_prompt(self) -> str:
+        """Create prompt string from filter name.
+        
+        Returns
+        -------
+        str
+            The :attr:`name_in_prompt` string.
+        """
+        return self.name_in_prompt
+    
     def apply(self, mol: Union[str, Chem.Mol]):
+        """Apply binary score filter to molecule.
+        
+        Parameters
+        ----------
+        mol : str or rdkit.Chem.Mol
+            Molecule to check, as SMILES string or RDKit molecule.
+        
+        Returns
+        -------
+        bool
+            True if score is 1, False if 0 or NaN.
+        """
         x = self.score.compute(mol)
         if math.isnan(x):
             return False
@@ -59,8 +158,31 @@ class BinaryScoreFilter(Filter):
 
 
 class NumericScoreFilter(Filter):
+    """Filter based on numeric score values with threshold/range checks.
+    
+    Uses a :class:`~smileyllama.score.base.Score` combined with a
+    :class:`~smileyllama.score.normalizer.StepNormalizer` to filter
+    molecules based on numeric criteria (e.g., "> 300 molecular weight").
+    """
 
     def __init__(self, score: Score, normalizer: StepNormalizer, name_in_prompt: str = ''):
+        """Initialize numeric score filter.
+        
+        Parameters
+        ----------
+        score : Score
+            Score instance that returns numeric values.
+        normalizer : StepNormalizer
+            Step normalizer that defines the threshold/range check.
+        name_in_prompt : str, optional
+            Name to use in prompt generation. If empty, uses score's
+            name_in_prompt attribute if available. Default is ''.
+        
+        Raises
+        ------
+        AssertionError
+            If name_in_prompt is empty and score has no name_in_prompt attribute.
+        """
         self.score = score
         self.normalizer = normalizer
 
@@ -69,6 +191,26 @@ class NumericScoreFilter(Filter):
     
     @classmethod
     def init_from_class(cls, score_cls, sign, val, name_in_prompt='', **params):
+        """Create filter from a score class and normalizer parameters.
+        
+        Parameters
+        ----------
+        score_cls : type
+            Score class to instantiate.
+        sign : str
+            Comparison operator for StepNormalizer ('>', '<', '=', etc.).
+        val : int, float, or tuple
+            Threshold or range value for StepNormalizer.
+        name_in_prompt : str, optional
+            Name for prompt generation. Default is ''.
+        **params
+            Parameters to pass to score_cls constructor.
+        
+        Returns
+        -------
+        NumericScoreFilter
+            Initialized filter instance.
+        """
         return cls(
             score_cls(**params),
             StepNormalizer(sign, val),
@@ -76,9 +218,28 @@ class NumericScoreFilter(Filter):
         )
 
     def create_prompt(self) -> str:
+        """Create prompt string from normalizer and name.
+        
+        Returns
+        -------
+        str
+            String like "> 300 molecular weight" or "between 0.5 and 0.8 LogP".
+        """
         return f'{str(self.normalizer)} {self.name_in_prompt}'
 
     def apply(self, mol: Union[str, Chem.Mol]) -> bool:
+        """Apply numeric score filter to molecule.
+        
+        Parameters
+        ----------
+        mol : str or rdkit.Chem.Mol
+            Molecule to check, as SMILES string or RDKit molecule.
+        
+        Returns
+        -------
+        bool
+            True if score passes the normalizer check, False otherwise.
+        """
         x = self.score.compute(mol)
         if math.isnan(x):
             return False
@@ -87,14 +248,20 @@ class NumericScoreFilter(Filter):
     
 @dataclass
 class FilterResultSingle:
-    smiles: str
-    success: bool
-    valid: bool
-    reason: str = ""
-    canonical_smiles: str = field(init=False)
-    unique: bool = True
+    """Result of applying filters to a single SMILES string.
+    
+    Note: Field descriptions are provided via type annotations and defaults.
+    See individual field definitions below for details.
+    """
+    smiles: str  #: Original SMILES string.
+    success: bool  #: Whether all filters passed.
+    valid: bool  #: Whether SMILES is parseable by RDKit.
+    reason: str = ""  #: Reason for failure if success=False. Empty if successful.
+    canonical_smiles: str = field(init=False)  #: Canonical SMILES representation (auto-computed if valid).
+    unique: bool = True  #: Whether this SMILES is unique (set externally).
 
     def __post_init__(self):
+        """Post-initialization: compute canonical SMILES and validate."""
         if not self.valid:
             self.success = False
             self.canonical_smiles = ''
@@ -106,6 +273,24 @@ class FilterResultSingle:
 
 
 def apply_filters_for_single_smiles(smi: str, filters: List[Filter]):
+    """Apply all filters to a single SMILES string.
+    
+    Checks if a SMILES string is valid and passes all provided filters.
+    Returns a result object with validation and filter pass status.
+    
+    Parameters
+    ----------
+    smi : str
+        SMILES string to check.
+    filters : list of Filter
+        List of :class:`Filter` instances to apply.
+    
+    Returns
+    -------
+    FilterResultSingle
+        Result object containing validation status, filter pass status,
+        and failure reasons if applicable.
+    """
     mol = safe_mol_from_smiles(smi)
     if mol is None:
         return FilterResultSingle(smi, False, False, 'Invalid SMILES')
@@ -121,6 +306,26 @@ def apply_filters_for_single_smiles(smi: str, filters: List[Filter]):
 
 
 def apply_filters(smiles: List[str], filters: List[Filter], nprocs: int = 1):
+    """Apply filters to a list of SMILES strings.
+    
+    Processes SMILES strings in parallel or sequentially, applying all
+    filters to each and returning results.
+    
+    Parameters
+    ----------
+    smiles : list of str
+        List of SMILES strings to filter.
+    filters : list of Filter
+        List of :class:`Filter` instances to apply to each SMILES.
+    nprocs : int, optional
+        Number of processes for parallel processing. If 1, processes
+        sequentially. Default is 1.
+    
+    Returns
+    -------
+    list of FilterResultSingle
+        List of filter results, one for each input SMILES string.
+    """
     res = []
     function = partial(apply_filters_for_single_smiles, filters=filters)
     if nprocs == 1:

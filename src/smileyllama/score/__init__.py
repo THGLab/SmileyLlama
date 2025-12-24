@@ -15,7 +15,30 @@ def aggregate(
     binary_scores: Union[np.ndarray, List[np.ndarray]],
     weights: np.ndarray
 ):
-
+    """Aggregate numeric and binary scores with weights.
+    
+    Combines multiple numeric scores using weighted averaging and multiple
+    binary scores using logical AND (product). The final score is the product
+    of the weighted numeric score and the binary score.
+    
+    Parameters
+    ----------
+    numeric_scores : numpy.ndarray or list of numpy.ndarray
+        Numeric scores to aggregate. Can be a single array or list of arrays.
+        NaN values are replaced with 0.0 before aggregation.
+    binary_scores : numpy.ndarray or list of numpy.ndarray
+        Binary scores (0 or 1) to aggregate. Can be a single array or list of arrays.
+        NaN values are replaced with 0.0 before aggregation. All binary scores
+        are combined using logical AND (product).
+    weights : numpy.ndarray
+        Weights for numeric scores. Will be normalized to sum to 1.
+        Shape should match the number of numeric score arrays.
+    
+    Returns
+    -------
+    numpy.ndarray
+        Aggregated scores. Computed as (weighted_sum(numeric_scores)) * (product(binary_scores)).
+    """
     numeric_scores = np.array(numeric_scores)
     numeric_scores[np.isnan(numeric_scores)] = 0.0
     weights = np.array(weights).reshape(-1, 1)

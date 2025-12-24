@@ -12,43 +12,163 @@ from .registry import register_class
 
 
 class Normalizer(ABC):
+    """Abstract base class for data normalization.
+    
+    Normalizers transform numerical data according to specific rules.
+    Subclasses must implement the :meth:`transform` method.
+    """
     def __init__(self, *args, **kwargs):
+        """Initialize the normalizer.
+        
+        Parameters
+        ----------
+        *args
+            Variable length argument list.
+        **kwargs
+            Arbitrary keyword arguments.
+        """
         ...
     
     @abstractmethod
     def transform(self, data: np.ndarray) -> np.ndarray:
+        """Transform the input data.
+        
+        This method must be implemented by subclasses to define the
+        specific normalization logic.
+
+        .. note::
+            The input data may contain NaN values. 
+
+            When implementing or calling reduction functions (such as calculating maxima, minima, means, etc.), you should use their `np.nan*` 
+            counterparts (e.g., `np.nanmax` instead of `np.max`) to ensure NaNs do not influence the results. 
+            
+            Additionally, after normalization, any NaN values present in the input should remain as NaN in the output. This will help maintain robustness 
+            and consistency when dealing with missing or undefined data points.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data to normalize.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Normalized data.
+        """
         ...
 
     def __call__(self, data: np.ndarray) -> np.ndarray:
+        """Call the normalizer as a function.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data to normalize.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Normalized data.
+        """
         return self.transform(data)
     
     def __init_subclass__(cls, *args, **kwargs):
+        """
+        Called when a subclass of Normalizer is defined.
+
+        This hook is used to automatically register all non-abstract
+        subclasses of Normalizer in the normalizer registry. If the subclass is
+        still abstract (i.e., has unimplemented abstract methods), it will not 
+        be registered.
+        """
         super().__init_subclass__(*args, **kwargs)
         if not inspect.isabstract(cls):
             register_class("normalizer", cls)
 
 
 class Identity(Normalizer):
-
+    """Identity normalizer that returns data unchanged.
+    
+    This normalizer performs no transformation and simply returns
+    the input data as-is.
+    """
     def __init__(self):
+        """Initialize the identity normalizer."""
         super().__init__()
     
     def transform(self, data):
+        """Return data unchanged.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Input data unchanged.
+        """
         return data
 
 
 class Negate(Normalizer):
-
+    """Normalizer that negates the input data.
+    
+    This normalizer multiplies all values by -1.
+    """
     def __init__(self):
+        """Initialize the negate normalizer."""
         super().__init__()
     
     def transform(self, data):
+        """Negate the input data.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Negated data (multiplied by -1).
+        """
         return -data
 
 
 
 class MinMaxNormalizer(Normalizer):
+    """Min-max normalizer that scales data to ``[0, 1]`` range.
+    
+    Clips data to optional min/max bounds, then normalizes to ``[0, 1]`` range
+    based on the actual min/max of the clipped data. i.e. the transform is given by
+
+    .. code-block:: python
+
+        X_clip = clip(X, min, max)
+        X_norm = (X_clip - min) / (max - min) 
+
+    """
     def __init__(self, vmin: Optional[float] = None, vmax: Optional[float] = None, negate: bool = False):
+        """Initialize the min-max normalizer.
+        
+        Parameters
+        ----------
+        vmin : float, optional
+            Minimum value to clip data to. If None, no lower clipping is performed.
+            Default is None.
+        vmax : float, optional
+            Maximum value to clip data to. If None, no upper clipping is performed.
+            Default is None.
+        negate : bool, optional
+            If True, return ``1 - normalized_value``. Default is False.
+        
+        Raises
+        ------
+        AssertionError
+            If ``vmin`` > ``vmax`` when both are provided.
+        """
         super().__init__()
         self.vmin = vmin
         self.vmax = vmax
@@ -59,6 +179,21 @@ class MinMaxNormalizer(Normalizer):
         self.negate = negate
     
     def transform(self, data: np.ndarray) -> np.ndarray:
+        """Normalize data to ``[0, 1]`` range.
+        
+        Clips data to ``[vmin, vmax]`` if provided, then normalizes to ``[0, 1]``
+        based on the min/max of the clipped data.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data to normalize.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Normalized data in ``[0, 1]`` range (or ``[1, 0]`` if ``negate=True``).
+        """
         data_transformed = np.clip(data, self.vmin, self.vmax)
         data_range = np.nanmax(data_transformed) - np.nanmin(data_transformed)
         data_transformed = (data_transformed - np.nanmin(data_transformed)) / data_range
@@ -68,7 +203,12 @@ class MinMaxNormalizer(Normalizer):
 NumericType = Union[int, float]
 
 class StepNormalizer(Normalizer):
-
+    """Step function normalizer that converts values to binary (0 or 1).
+    
+    Applies a threshold or range check to convert continuous values to
+    binary outputs. Supports comparison operators (>, <, =, >=, <=) or
+    range checks (between two values).
+    """
     OPS = {
         '=': operator.eq,
         '>': operator.gt, '<': operator.lt,
@@ -80,6 +220,23 @@ class StepNormalizer(Normalizer):
         sign: Literal['>', '<', '=', '>=', '<=', ''],
         val: Union[NumericType, Tuple[NumericType, NumericType]]
     ):
+        """Initialize the step normalizer.
+        
+        Parameters
+        ----------
+        sign : {'>', '<', '=', '>=', '<=', ''}
+            Comparison operator. If empty string, performs range check.
+        val : int or float or (int, int) or (float, float)
+            Threshold value for comparison operators, or `(min, max)` tuple
+            for range check.
+        
+        Raises
+        ------
+        RuntimeError
+            If sign is empty and val is not a tuple of length 2.
+        AssertionError
+            If sign is empty and ``val[0] >= val[1]``.
+        """
         super().__init__()
         self.sign = sign
         self.val = val
@@ -87,7 +244,7 @@ class StepNormalizer(Normalizer):
             try:
                 lo, hi = val[0], val[1]
             except Exception as e:
-                raise RuntimeError(f"Invalid range: {values}")
+                raise RuntimeError(f"Invalid range: {val}")
             assert lo < hi, f'upper bound is smaller than lower bound'
     
     def __str__(self):
@@ -103,6 +260,23 @@ class StepNormalizer(Normalizer):
         self, 
         data: Union[np.ndarray, NumericType, List[NumericType]],
     ) -> np.ndarray:
+        """Transform data to binary values based on threshold or range.
+        
+        For scalar input, returns 1 if condition is met, 0 otherwise.
+        For array input, returns array of 1.0 (condition met) or 0.0 (not met).
+        NaN values are preserved as NaN.
+        
+        Parameters
+        ----------
+        data : numpy.ndarray, int, float, or list of int/float
+            Input data to evaluate.
+        
+        Returns
+        -------
+        numpy.ndarray
+            Binary array (1.0 or 0.0) or scalar (1 or 0) for scalar input.
+            NaN values are preserved.
+        """
         if isinstance(data, float) or isinstance(data, int):
             if math.isnan(data):
                 return data

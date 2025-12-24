@@ -41,6 +41,10 @@ sl = "smileyllama.cli:main"
 dev = [
   "pytest",
   "pytest-cov",
+  "sphinx>=5.0.0",
+  "sphinx-rtd-theme>=1.0.0",
+  "sphinx-autodoc-typehints>=1.19.0",
+  "autodoc_pydantic>=1.8.0",
 ]
 
 [tool.setuptools.packages.find]

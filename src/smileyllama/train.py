@@ -10,7 +10,6 @@ import numpy as np
 from rdkit import Chem
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
-# from .control import *
 
 
 # def make_sft_data_one_smi(
@@ -126,6 +125,37 @@ def make_dpo_data_from_pairs(
     user_prompt_base: str = 'Output a SMILES string for a drug like molecule',
     properties: List[str] = list()
 ) -> List[Dict[str, str]]:
+    """Create DPO (Direct Preference Optimization) training data from SMILES pairs.
+    
+    Generates a JSONL file containing DPO training examples from pairs of
+    (chosen, rejected) SMILES strings. Each example includes a system prompt,
+    user prompt (optionally with properties), and chosen/rejected responses.
+    
+    Parameters
+    ----------
+    pairs : list of tuple of (str, str)
+        List of (chosen_smiles, rejected_smiles) pairs. The pairs are
+        shuffled before writing to the output file.
+    out_jsonl : os.PathLike
+        Path to output JSONL file where training data will be written.
+    format : {'chat', 'instruct'}, optional
+        Prompt format to use. Currently only 'instruct' is fully supported.
+        Default is 'instruct'.
+    system_prompt : str, optional
+        System prompt for the training examples. Default is a standard
+        drug-like molecule generation prompt.
+    user_prompt_base : str, optional
+        Base user prompt. Properties will be appended if provided.
+        Default is a standard molecule generation prompt.
+    properties : list of str, optional
+        List of property descriptions to include in the user prompt.
+        Default is empty list.
+    
+    Returns
+    -------
+    list of dict
+        List of dictionaries with the corresponding format
+    """
     if len(properties) > 0:
         user_prompt = f'{user_prompt_base} with the following properties: {", ".join(properties)}:'
     else:
@@ -151,6 +181,40 @@ def make_dpo_data_from_scores(
     margin: float = 0.1,
     **kwargs
 ):
+    """Create DPO training data by pairing responses based on score differences.
+    
+    Generates (chosen, rejected) pairs by comparing scores between different
+    responses. For each response, selects other responses with scores differing
+    by at least the margin, then creates pairs where the higher-scoring
+    response is chosen.
+    
+    Parameters
+    ----------
+    responses : list of str
+        List of SMILES strings (responses) to create pairs from.
+    scores : numpy.ndarray
+        Array of scores corresponding to each response. Must have the same
+        length as responses.
+    out_jsonl : os.PathLike
+        Path to output JSONL file where training data will be written.
+    num_pairs_per_response : int, optional
+        Maximum number of pairs to generate for each response. Default is ``2``.
+    margin : float, optional
+        Minimum score difference required to create a pair. Responses with
+        scores within this margin are not paired. Default is ``0.1``.
+    **kwargs
+        Additional arguments passed to :func:`make_dpo_data_from_pairs`
+    
+    Returns
+    -------
+    list of dict
+        List of DPO training examples as dictionaries.
+    
+    Raises
+    ------
+    AssertionError
+        If the length of scores does not match the length of responses.
+    """
 
     pairs = []
     scores = np.array(scores).flatten() if not isinstance(scores, np.ndarray) else scores.flatten()

@@ -63,3 +63,6 @@ Thumbs.db
 
 tests/_test*
 last_run_prepared/
+
+# Sphinx build files
+docs/_build/

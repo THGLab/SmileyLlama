@@ -4,13 +4,30 @@ from typing import Dict, Union
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import QED, Lipinski, Descriptors, Crippen
+from rdkit.Chem import QED, Lipinski
 
 from .base import Score, accept_smiles
 from .registry import register
 
 
-def log_prob(vector, bin_range):
+def _log_prob(vector, bin_range):
+    """Compute log probabilities for values in bins.
+    
+    Calculates the log probability of values falling into bins defined
+    by bin_range thresholds.
+    
+    Parameters
+    ----------
+    vector : array-like
+        Input values to bin.
+    bin_range : array-like
+        Threshold values defining bin boundaries.
+    
+    Returns
+    -------
+    numpy.ndarray
+        Log probabilities for each bin.
+    """
     vector=np.array(vector)
     counts=[np.sum(vector<threshold) for threshold in bin_range]+[len(vector)]
     diffs = np.array(counts[1:])-np.array(counts[:-1])
@@ -18,7 +35,24 @@ def log_prob(vector, bin_range):
     return np.log(prob)
 
 
-def make_onehot(num, bin_range):
+def _make_onehot(num, bin_range):
+    """Create one-hot encoding for a value based on bin ranges.
+    
+    Creates a one-hot vector indicating which bin the value falls into.
+    If the value is below the minimum bin range, the first bin is set to 1.
+    
+    Parameters
+    ----------
+    num : float or int
+        Value to encode.
+    bin_range : array-like
+        Threshold values defining bin boundaries.
+    
+    Returns
+    -------
+    numpy.ndarray
+        One-hot encoded vector with 1 in the appropriate bin, 0 elsewhere.
+    """
     bool_indicator = np.concatenate([num < bin_range, [True]])
     onehot_indicator = bool_indicator[1:].astype(int) - bool_indicator[:-1].astype(int)
     if num < bin_range[0]:
@@ -26,7 +60,19 @@ def make_onehot(num, bin_range):
     return onehot_indicator
 
 
-def get_max_ring_size(mol):
+def _get_max_ring_size(mol):
+    """Get the maximum ring size in a molecule.
+    
+    Parameters
+    ----------
+    mol : rdkit.Chem.Mol
+        RDKit molecule object.
+    
+    Returns
+    -------
+    int
+        Maximum ring size, or 0 if molecule has no rings.
+    """
     ring_sizes = [len(r) for r in mol.GetRingInfo().AtomRings()]
     if len(ring_sizes) == 0:
         return 0
@@ -36,10 +82,10 @@ def get_max_ring_size(mol):
 @register("rdkit_scores")
 class iMinerDrugLikeliness(Score):
     '''
-    Drug Likeliness score described in 10.1021/acs.jcim.4c00634 equation 1-3
+    Drug likeliness score described in `10.1021/acs.jcim.4c00634 <https://doi.org/10.1021/acs.jcim.4c00634>`_ equation 1-3
     '''
 
-    LOG_PROPS = {
+    _LOG_PROPS = {
         'frac_csp3': [
             -3.1844743981508685, -5.991464547107982, -3.5684333010380693, -3.6045383056801854, -3.7422802308410517, -3.4265151896464454, -3.387294476493164, -3.372609924810243, 
             -3.3214624136433017, -3.579128590154817, -3.158251203051766, -3.1629681929299047, -3.3755296349135775, -3.165335057940171, -3.3524072174927233, -3.0159349808715104, 
@@ -116,7 +162,7 @@ class iMinerDrugLikeliness(Score):
         ]
     }
 
-    PROP_RANGES = {
+    _PROP_RANGES = {
         'frac_csp3': np.linspace(0,1,51), 'heavy_atom': np.arange(10,61),
         'hbond_donor': np.arange(7), 'hbond_acceptor': np.arange(12),
         'num_ring_aliphatic': np.arange(6), 'num_ring_aromatic': np.arange(6),
@@ -126,11 +172,23 @@ class iMinerDrugLikeliness(Score):
     }
 
     def __init__(self, relative_weights="inverse_entropy", offset=5.0):
-        n_total_properties = len(self.LOG_PROPS)
+        """Initialize iMinerDrugLikeliness scorer.
+        
+        Parameters
+        ----------
+        relative_weights : str or numpy.ndarray, optional
+            Method for computing property weights. If "inverse_entropy",
+            weights are computed as inverse entropy. If numpy array,
+            uses provided weights. Otherwise, uses uniform weights.
+            Default is "inverse_entropy".
+        offset : float, optional
+            Offset value added to the final score. Default is 5.0.
+        """
+        n_total_properties = len(self._LOG_PROPS)
         if relative_weights == "inverse_entropy":
             weight_vectors = []
-            for p in self.LOG_PROPS:
-                x = np.array(self.LOG_PROPS[p])
+            for p in self._LOG_PROPS:
+                x = np.array(self._LOG_PROPS[p])
                 weight_vectors.append(-1 / x.dot(np.exp(x)))
             self.relative_weights = np.array(weight_vectors) / np.sum(weight_vectors)
         elif isinstance(relative_weights, np.ndarray):
@@ -141,13 +199,50 @@ class iMinerDrugLikeliness(Score):
         self.offset = offset
     
     def compute_from_props(self, props: Dict[str, Union[int, float]]):
+        """Compute drug likeliness score from molecular properties.
+        
+        Parameters
+        ----------
+        props : dict
+            Dictionary mapping 13 property names to their values. See the :meth:`compute_props` for more details
+        
+        Returns
+        -------
+        float
+            Drug likeliness score.
+        """
         log_props = np.array([
-            make_onehot(v, self.PROP_RANGES[k]).dot(self.LOG_PROPS[k]) for k, v in props.items()
+            _make_onehot(v, self._PROP_RANGES[k]).dot(self._LOG_PROPS[k]) for k, v in props.items()
         ])
         return log_props.dot(self.relative_weights) + self.offset
     
     @classmethod
     def compute_props(cls, mol: Chem.Mol):
+        """Compute molecular properties needed for drug likeliness score.
+        
+        Parameters
+        ----------
+        mol : rdkit.Chem.Mol
+            RDKit molecule object.
+        
+        Returns
+        -------
+        dict
+            Dictionary of molecular properties including:
+            - frac_csp3: Fraction of sp3 carbons
+            - heavy_atom: Number of heavy atoms
+            - hbond_donor: Number of hydrogen bond donors
+            - hbond_acceptor: Number of hydrogen bond acceptors
+            - num_ring_aliphatic: Number of aliphatic rings
+            - num_ring_aromatic: Number of aromatic rings
+            - num_rot_bonds: Number of rotatable bonds
+            - molwt: Molecular weight
+            - alogp: ALogP value
+            - psa: Polar surface area
+            - alerts: Number of QED structure alerts
+            - hetero_prop: Proportion of heteroatoms
+            - max_ring_size: Maximum ring size
+        """
         qed_prop = QED.properties(mol)
         props = {
             'frac_csp3': Lipinski.FractionCSP3(mol),
@@ -163,11 +258,23 @@ class iMinerDrugLikeliness(Score):
             'alerts': qed_prop.ALERTS
         }
         props['hetero_prop'] = Lipinski.NumHeteroatoms(mol) / props['heavy_atom']
-        props['max_ring_size'] = get_max_ring_size(mol)
+        props['max_ring_size'] = _get_max_ring_size(mol)
         return props
 
     @accept_smiles
     def compute(self, mol: Chem.Mol):
+        """Compute drug likeliness score for a molecule.
+        
+        Parameters
+        ----------
+        mol : rdkit.Chem.Mol or str
+            Molecule to score, either as RDKit molecule or SMILES string.
+        
+        Returns
+        -------
+        float
+            Drug likeliness score.
+        """
         props = self.compute_props(mol)
         score = self.compute_from_props(props)
         return score
