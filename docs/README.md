@@ -12,8 +12,6 @@ Install the package with `[dev]` mode:
 pip install -e ".[dev]"
 ```
 
-This will install Sphinx and required extensions including `autodoc_pydantic` for rendering Pydantic model field descriptions.
-
 ### Build Commands
 
 To build the HTML documentation:
