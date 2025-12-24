@@ -72,6 +72,3 @@ Workflow Module
    :undoc-members:
    :show-inheritance:
 
-The Pydantic models (NormalizerConfig, ScoreConfig, RLConfig, WorkflowConfig) are automatically
-documented with field descriptions by the autodoc_pydantic extension.
-
