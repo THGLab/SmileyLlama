@@ -7,23 +7,15 @@
 
 from __future__ import annotations
 
-from typing import Literal, Any, Union, Tuple, Optional, List
+from typing import Union, List
 from abc import ABC, abstractmethod
-import os
-import sys
-import operator
-import random
 import math
 from dataclasses import dataclass, field
 import multiprocessing as mp
 from functools import partial
-from tqdm import tqdm
-import warnings
 
+from tqdm import tqdm
 from rdkit import Chem
-from rdkit.Chem import Descriptors, QED, RDConfig, FilterCatalog, BRICS
-sys.path.append(os.path.join(RDConfig.RDContribDir, 'SA_Score'))
-import sascorer
 
 from .score import Score, StepNormalizer, safe_mol_from_smiles
 
