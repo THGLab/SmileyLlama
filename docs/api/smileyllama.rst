@@ -1,74 +1,113 @@
-smileyllama Package
-===================
+Workflow
+========
 
-Core modules for SmileyLlama.
-
-.. automodule:: smileyllama
+.. automodule:: smileyllama.workflow
    :members:
    :undoc-members:
    :show-inheritance:
 
-CLI Module
+Score
+=====
+
+Module for assigning scores to molecules.
+
+Core
+----
+
+.. automodule:: smileyllama.score
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: smileyllama.score.base
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: smileyllama.score.registry
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Normalizer
 ----------
+
+.. automodule:: smileyllama.score.normalizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+RDKit Properties
+----------------
+
+.. automodule:: smileyllama.score.rdkit_props
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+iMiner Properties
+-----------------
+
+.. automodule:: smileyllama.score.iminer_props
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Autodock Vina
+-------------
+
+.. automodule:: smileyllama.score.vina
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+CLI
+===
 
 .. automodule:: smileyllama.cli
    :members:
    :undoc-members:
    :show-inheritance:
 
-Command Module
---------------
-
-.. automodule:: smileyllama.cmd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Filter Module
--------------
+Filter
+======
 
 .. automodule:: smileyllama.filter
    :members:
    :undoc-members:
    :show-inheritance:
 
-Inference Module
-----------------
+Inference
+=========
 
 .. automodule:: smileyllama.inference
    :members:
    :undoc-members:
    :show-inheritance:
 
-Plugin Module
--------------
+Plugin
+======
 
 .. automodule:: smileyllama.plugin
    :members:
    :undoc-members:
    :show-inheritance:
 
-Train Module
-------------
+Train
+=====
 
 .. automodule:: smileyllama.train
    :members:
    :undoc-members:
    :show-inheritance:
 
-Utils Module
-------------
+Utils
+=====
 
 .. automodule:: smileyllama.utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-Workflow Module
----------------
-
-.. automodule:: smileyllama.workflow
-   :members:
-   :undoc-members:
-   :show-inheritance:
 

@@ -15,7 +15,7 @@ from rdkit.Chem import AllChem
 from meeko import MoleculePreparation, PDBQTWriterLegacy, PDBQTMolecule, RDKitMolCreate
 
 from .base import Score, safe_mol_from_smiles
-from ..cmd import safe_run_command
+from ..utils import safe_run_command
 
 
 class Vina(Score):
@@ -498,7 +498,8 @@ class UniDock(Vina):
             Path to unidock executable. Default is 'unidock'.
         **kwargs
             Additional arguments passed to :meth:`Vina.__init__`.
-            Can include 'search_mode' in extra_docking_settings:
+            Can include ``search_mode`` in ``extra_docking_settings``:
+
             - 'fast': exhaustiveness=128, max_step=20
             - 'balance': exhaustiveness=384, max_step=40
             - 'detail': exhaustiveness=512, max_step=40

@@ -230,6 +230,7 @@ class iMinerDrugLikeliness(Score):
         -------
         dict
             Dictionary of molecular properties including:
+            
             - frac_csp3: Fraction of sp3 carbons
             - heavy_atom: Number of heavy atoms
             - hbond_donor: Number of hydrogen bond donors

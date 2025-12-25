@@ -57,7 +57,7 @@ class WorkflowConfig(BaseModel):
     niters: int = Field(description="Number of iterations to run.")
     model_path: str = Field(description="Base language model (path or HuggingFace format).")
     lora_model_path: str = Field(default='', description="Path to LoRA adapter weights for initial iteration.")
-    nprocs: int = Field(default=-1, description="Number of processes for parallel computation. If -1, ``uses multiprocessing.cpu_count() - 2``.")
+    nprocs: int = Field(default=-1, description="Number of processes for parallel computation. If -1, uses ``multiprocessing.cpu_count() - 2``.")
     remove_iter_model: bool = Field(default=False, description="If True, remove merged models from previous iterations to save space.")
     log_level: Literal['info', 'debug'] = Field(default='info', description="Logging level.")
     plugin: str = Field(default='', description="Path to Python plugin file to load.")
@@ -78,10 +78,15 @@ class WorkflowConfig(BaseModel):
     @field_validator("scores")
     @classmethod
     def validate_score_keys(cls, scores):
-        bad = ['total', 'smiles']
+        """Validate that score keys do not conflict with reserved keys.
+        
+        Ensures that user-defined score names do not overlap with reserved
+        column names used internally by the workflow (``'total'``, ``'smiles'``,
+        and ``'random_smiles'``).
+        """
+        reserved = ['total', 'smiles', 'random_smiles']
         for key in scores:
-            assert key not in bad, f'score key {key} should not in {bad}'
-            assert not key.endswith("_norm"), f"score key {key} should not end with '_norm'"
+            assert key not in reserved, f'score key {key} should not in {reserved}'
         return scores
 
 
@@ -178,7 +183,7 @@ class Workflow:
         logger.propagate = False
         self.logger = logger
         self.log_file = log_file
-    
+
     def run(self):
         """Run the workflow.
         

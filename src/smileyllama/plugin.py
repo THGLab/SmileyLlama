@@ -28,7 +28,7 @@ def load_module_from_file(path: str):
     extend SmileyLlama functionality with custom plugins. The plugin file
     is copied to the plugin directory (``~/.smileyllama_plugins`` by default,
     or the directory specified by ``SL_PLUGIN_DIR`` environment variable)
-    and registered in :func:`sys.modules` with a unique name based on the MD5 hash
+    and registered in :data:`sys.modules` with a unique name based on the MD5 hash
     of the file content.
     
     Parameters
