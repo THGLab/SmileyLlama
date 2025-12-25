@@ -1,13 +1,14 @@
 import os
 import subprocess
 import contextlib
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from pathlib import Path
 from typing import List, Union, Optional, Tuple
 
 from ruamel.yaml import YAML
 
-from .score import Score
+if TYPE_CHECKING:
+    from .score.base import Score
 
 
 def safe_read_yaml(path: os.PathLike):
