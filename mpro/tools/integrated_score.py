@@ -1,11 +1,13 @@
 import sys, os, yaml, argparse
 import numpy as np
 import pandas as pd
-sys.path.insert(0, "/path/to/iMiner/env")
 from iMiner.rl_generate.core.reward import RewardAssigner
+from pathlib import Path
+script_dir = Path(__file__).parent
+
 
 def get_score(smiles, output_dir):
-    config = "/path/to/mpro/tools/integrated_config.yaml"
+    config = script_dir / "integrated_config.yaml"
     with open(config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
