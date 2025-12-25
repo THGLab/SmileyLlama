@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import subprocess
 import contextlib
@@ -85,11 +86,11 @@ def modify_yaml(old_path: os.PathLike, new_path: os.PathLike, args: Dict[str, An
 
 
 def run_score_test(
-    score: Score, 
+    score: "Score", 
     test_smiles: List[str], 
     nprocs: Optional[int] = None, 
     wdir: Optional[os.PathLike] = None, 
-    dependency_scores: Dict[str, Score] = dict()
+    dependency_scores: Dict[str, "Score"] = dict()
 ):
     """Run a score computation test on a list of SMILES strings.
     
