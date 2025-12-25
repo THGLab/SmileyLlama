@@ -184,6 +184,7 @@ class iMinerDrugLikeliness(Score):
         offset : float, optional
             Offset value added to the final score. Default is 5.0.
         """
+        super().__init__()
         n_total_properties = len(self._LOG_PROPS)
         if relative_weights == "inverse_entropy":
             weight_vectors = []

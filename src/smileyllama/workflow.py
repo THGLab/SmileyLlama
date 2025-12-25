@@ -178,7 +178,7 @@ class Workflow:
         logger.propagate = False
         self.logger = logger
         self.log_file = log_file
-            
+    
     def run(self):
         """Run the workflow.
         

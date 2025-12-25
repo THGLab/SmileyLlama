@@ -1,14 +1,35 @@
 import importlib.util
-import sys
+import os, sys
 from pathlib import Path
+import shutil
+import hashlib
+
+
+PLUGIN_DIR = Path(
+    os.environ.get('SL_PLUGIN_DIR', '~/.smileyllama_plugins')
+).expanduser().resolve()
+PLUGIN_DIR.mkdir(exist_ok=True)
+sys.path.append(str(PLUGIN_DIR))
+
+
+def md5_file(path: str | Path, chunk_size: int = 8192) -> str:
+    """Compute md5 for a file based on its content"""
+    h = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def load_module_from_file(path: str):
     """Load a Python module from a file path.
     
     Dynamically loads a Python module from a file, allowing users to
-    extend SmileyLlama functionality with custom plugins. The module
-    is registered in sys.modules with a unique name based on the file path.
+    extend SmileyLlama functionality with custom plugins. The plugin file
+    is copied to the plugin directory (``~/.smileyllama_plugins`` by default,
+    or the directory specified by ``SL_PLUGIN_DIR`` environment variable)
+    and registered in :func:`sys.modules` with a unique name based on the MD5 hash
+    of the file content.
     
     Parameters
     ----------
@@ -18,7 +39,8 @@ def load_module_from_file(path: str):
     Returns
     -------
     module
-        The loaded Python module object.
+        The loaded Python module object, registered with a name like
+        ``plugin_{md5_hash}``.
     
     Raises
     ------
@@ -33,11 +55,10 @@ def load_module_from_file(path: str):
     Load a custom plugin that defines new Score classes:
     
     >>> plugin = load_module_from_file("my_plugin.py")
+    >>> # Plugin classes are now registered and available
     """
-    path = Path(path).resolve()
-    assert path.is_file() and path.suffix == '.py', f'Invalid python file: {path}'
-    module_name = f'smileyllama.user_plugin_{hash(path)}'
-
+    module_name = f'plugin_{md5_file(path)}'
+    shutil.copyfile(path, PLUGIN_DIR / f'{module_name}.py')
     spec = importlib.util.spec_from_file_location(module_name, path)
     module = importlib.util.module_from_spec(spec)
 

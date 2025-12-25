@@ -553,6 +553,7 @@ class SubstructureMatch(Score):
         AssertionError
             If substructure cannot be parsed as SMILES or SMARTS.
         """
+        super().__init__()
         self.sub_str = substruct
         sub = Chem.MolFromSmiles(self.sub_str)
         if sub is None:
