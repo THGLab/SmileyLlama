@@ -1,10 +1,10 @@
-base_model: THGLab/Llama-3.1-8B-SmileyLlama-1.1
+base_model: ./outputs/merged
 model_type: LlamaForCausalLM
 tokenizer_type: AutoTokenizer
 load_in_4bit: false
 load_in_8bit: false
 strict: false
-output_dir: /path/to/outputs
+output_dir: ./outputs
 val_set_size: 0
 sequence_len: 1024
 sample_packing: false
@@ -61,6 +61,6 @@ eval_max_new_tokens: 128
 seed: 1
 rl: dpo
 datasets:
-  - path: /path/to/dpodataset/dpodataset #Ensure that the folder dpodataset has the file named dpodataset.jsonl inside it
+  - path: ./dpodataset #Ensure that the folder dpodataset has the file named dpodataset.jsonl inside it
     type: chatml.argilla
     split: train
