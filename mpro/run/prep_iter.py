@@ -10,6 +10,8 @@ import torch
 from tqdm import tqdm
 import sys
 from rdkit import Chem
+from pathlib import Path
+script_dir = Path(__file__).parent
 
 def make_dpo_dataset(scoresfile, num_pairings, prompt):
     # Read the file
@@ -97,7 +99,7 @@ def score_sars2pro(smilesfile, scoresfile, property_string):
     scoring_python = '/path/to/iminer/python'
     inp_smiles = ['--input_smiles', str(smilesfile)]
     out_scores = ['--output_csv', str(scoresfile)]
-    scoring_program = '/path/to/mpro/tools/integrated_score.py'
+    scoring_program = str(script_dir.parent / 'tools/integrated_score.py')
     subprocess.run([scoring_python, scoring_program] + inp_smiles + out_scores)
     return
 
@@ -116,7 +118,7 @@ def inf_and_score(pipeline, job_directory, task_name, iteration, property_string
     return make_dpo_dataset(scoresfile, num_pairings, prompt)
 
 if __name__ == '__main__':
-    job_directory = '/path/to/mpro/run'
+    job_directory = str(script_dir)
     iteration = sys.argv[1]
     nsamples = 128
     num_pairings = 8
