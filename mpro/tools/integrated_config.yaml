@@ -2,7 +2,7 @@ rewards:
   - type: docking
     weight: 3
     params:
-      protein_file: ./Mpro_7L11.pdb
+      protein_file: /path/to/Mpro_7L11.pdb
       box: [-33, -15, -41, -9, 9, -17]
       protocols: ["vina-gpu"]
       timeout: 45
