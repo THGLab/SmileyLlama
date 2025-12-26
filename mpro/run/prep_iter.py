@@ -96,7 +96,7 @@ def create_prompt(task_name):
     return prompt
 
 def score_sars2pro(smilesfile, scoresfile, property_string):
-    scoring_python = '/path/to/iminer/python'
+    scoring_python = '/path/to/vinaenv/bin/python'
     inp_smiles = ['--input_smiles', str(smilesfile)]
     out_scores = ['--output_csv', str(scoresfile)]
     scoring_program = str(script_dir.parent / 'tools/integrated_score.py')
