@@ -1,5 +1,5 @@
 
-# Under construction! Installation instructions are still being worked on
+# SmileyLlama: Modifying Large Language Models\\for Directed Chemical Space Exploration
 This repository contains code and data used by the [SmileyLlama](https://arxiv.org/abs/2409.02231) project to train SmileyLlama and its variants, and to produce results used in the paper. The SmileyLlama model is not hosted here; rather, it's hosted on [huggingface](https://huggingface.co/THGLab/Llama-3.1-8B-SmileyLlama-1.1), along with variants trained for [adhering to properties specified in a prompt](https://huggingface.co/THGLab/Llama-3.1-8B-SmileyLlama-1.1-Prompt-Following) and for [generating binders to SARS-CoV-2 Main Protease (MPro)](https://huggingface.co/THGLab/Llama-3.1-8B-SmileyLlama-1.1-Mpro). 
 
 For those who want a gentle, yet hands-on introduction to SmileyLlama, download the Demo.ipynb jupyter notebook, which provides a demonstration of SmileyLlama's abilities and a brief tutorial on writing prompts for it and related models.
@@ -151,8 +151,9 @@ cd -
 ```
 
 Finally, you'll need to compile and install [Vina-GPU using the instructions on their github page](https://github.com/DeltaGroupNJUPT/Vina-GPU-2.1) in the `vina-gpu-env` virtual environment.
-Add the vina-gpu environment to your LD Library path with `LD_LIBRARY_PATH=/path/to/that/environemtn/lib:$LD_LIBRARY_PATH`
+Add the vina-gpu environment to your LD Library path with `LD_LIBRARY_PATH=/path/to/that/environment/lib:$LD_LIBRARY_PATH`
 Ensure that boost is added to your path with `export LD_LIBRARY_PATH=/path/to/boost_1_83_0/lib:$LD_LIBRARY_PATH`
+You will additionally need to 
 
 ### Running the optimization
 Go to `mpro/run` and either copy or download the weights into a directory labeled outputs/merged
@@ -171,7 +172,7 @@ Finally, start the training run with
 cd mpro/run
 bash run.sh
 ```
-which will run 
+which will run the procedure for MPro optimization through DPO as discussed in our paper.
 
 
 ### To reproduce key results
