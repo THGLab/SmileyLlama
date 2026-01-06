@@ -64,7 +64,7 @@ scores:
       name: Identity
 rl_config:
   algorithm: dpo
-  config_file: ./cf_dpo_mpro.yml
+  config_file: ./dpo_axo.yml
   dpo_num_pairs_per_smiles: 2
   dpo_score_margin: 0.0
   dpo_use_random_smiles: false
