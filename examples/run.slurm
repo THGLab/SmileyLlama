@@ -16,5 +16,5 @@ echo "Acceletrate Path: $(which accelerate)"
 echo "CUDA DEVICES: $CUDA_VISIBLE_DEVICES"
 echo "Python: $(which python)"
 
-python run.py
+sl sl_config_basic.yml
 
