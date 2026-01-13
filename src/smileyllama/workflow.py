@@ -316,7 +316,7 @@ class Workflow:
         """
         return self.get_iter_dir(it) / '03.rl'
 
-    def init_scores(self):
+    def init_scores(self, working_dir: os.PathLike | None = None):
         """Initialize score instances for the current iteration.
         
         Creates score and normalizer instances based on configuration,
@@ -328,6 +328,9 @@ class Workflow:
         dict of str to tuple of (Score, Normalizer)
             Dictionary mapping score names to (score, normalizer) tuples.
         """
+        # compatibility for stand alone scoring
+        working_dir = self.get_score_dir() if working_dir is None else Path(working_dir)
+        working_dir.mkdir(exist_ok=True, parents=True)
         scores = {}
         for tag, score_config in self.config.scores.items():
             start = score_config.start_iter
@@ -337,7 +340,7 @@ class Workflow:
                 norm = REGISTRY['normalizer'][norm_config.name](**norm_config.parameters)
                 score = REGISTRY['score'][score_config.name](**score_config.parameters)
                 score.set_nprocs(self.nprocs)
-                score.set_working_dir(self.get_score_dir() / tag)
+                score.set_working_dir(working_dir / tag)
                 scores[tag] = (score, norm)
         
         # add dependency scores
@@ -350,11 +353,11 @@ class Workflow:
                 
         return scores
     
-    def score_df(self, df: str | Path | pd.DataFrame, smiles_col: str = 'smiles') -> pd.DataFrame:
-        df = df if isinstance(pd.DataFrame) else pd.read_csv(str(df))
+    def score_df(self, df: str | Path | pd.DataFrame, smiles_col: str = 'smiles', working_dir: os.PathLike | None = None) -> pd.DataFrame:
+        df = df if isinstance(df, pd.DataFrame) else pd.read_csv(str(df))
         smiles = df[smiles_col].tolist()
 
-        scores = self.init_scores()
+        scores = self.init_scores(working_dir)
         data = {'index': np.arange(len(smiles)), 'smiles': smiles, 'total': np.zeros(len(smiles))}
         for tag in scores:
             score, norm = scores[tag]
