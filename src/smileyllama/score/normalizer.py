@@ -1,5 +1,5 @@
 __all__ = [
-    'Normalizer', 'Identity', 'MinMaxNormalizer', 'StepNormalizer'
+    'Normalizer', 'Identity', 'Clip', 'MinMaxNormalizer', 'StepNormalizer'
 ]
 
 from typing import Optional, Dict, Union, Literal, Tuple, List
@@ -136,6 +136,18 @@ class Negate(Normalizer):
         """
         return -data
 
+
+class Clip(Normalizer):
+    def __init__(self, vmin: Optional[float] = None, vmax: Optional[float] = None):
+        super().__init__()
+        self.vmin = vmin
+        self.vmax = vmax
+
+        if self.vmin is not None and self.vmax is not None:
+            assert self.vmin <= self.vmax, f'Lower bound ({self.vmin}) is larger than upper bound ({self.vmax}) '
+    
+    def transform(self, data: np.ndarray) -> np.ndarray:
+        return np.clip(data, self.vmin, self.vmax)
 
 
 class MinMaxNormalizer(Normalizer):

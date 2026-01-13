@@ -40,10 +40,12 @@ def aggregate(
         Aggregated scores. Computed as (weighted_sum(numeric_scores)) * (product(binary_scores)).
     """
     numeric_scores = np.array(numeric_scores)
+    nanmask = np.isnan(numeric_scores).sum(axis=0) > 0
     numeric_scores[np.isnan(numeric_scores)] = 0.0
     weights = np.array(weights).reshape(-1, 1)
-    weights /= np.sum(weights)
+    weights /= np.sum(np.abs(weights))
     numeric_scores = np.sum(numeric_scores * weights, axis=0)
+    numeric_scores[nanmask] = 0.0
 
     binary_scores = np.array(binary_scores)
     binary_scores[np.isnan(binary_scores)] = 0.0
