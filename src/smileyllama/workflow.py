@@ -350,22 +350,12 @@ class Workflow:
                 
         return scores
     
-    def run_scores(self):
-        """Run the scoring stage for the current iteration.
-        
-        Loads unique SMILES from sampling stage, computes all active scores,
-        applies normalizers, aggregates scores, and saves results to CSV.
-        Logs statistics for each score.
-        """
-        self.logger.info(f"##### Iter {self.iter} : Score #####")
-        stage_dir = self.get_score_dir()
-        stage_dir.mkdir(exist_ok=True, parents=True)
-
-        df = pd.read_csv(str(self.get_sample_dir() / 'sample_unique.csv'))
-        smiles = df['smiles'].tolist()
+    def score_df(self, df: str | Path | pd.DataFrame, smiles_col: str = 'smiles') -> pd.DataFrame:
+        df = df if isinstance(pd.DataFrame) else pd.read_csv(str(df))
+        smiles = df[smiles_col].tolist()
 
         scores = self.init_scores()
-        data = {'index': np.arange(len(smiles)), 'smiles': smiles, 'random_smiles': df['random_smiles'].tolist(), 'total': np.zeros(len(smiles))}
+        data = {'index': np.arange(len(smiles)), 'smiles': smiles, 'total': np.zeros(len(smiles))}
         for tag in scores:
             score, norm = scores[tag]
             raw_scores = score.compute_batch(smiles)
@@ -402,8 +392,24 @@ class Workflow:
         data['total'] += aggregate(numeric_scores, binary_scores, weights)
         
         df = pd.DataFrame(data)
-        df.sort_values('total', inplace=True, ascending=False)
-        df.to_csv(str(stage_dir / 'score.csv'), index=None)
+        return df
+    
+    def run_scores(self):
+        """Run the scoring stage for the current iteration.
+        
+        Loads unique SMILES from sampling stage, computes all active scores,
+        applies normalizers, aggregates scores, and saves results to CSV.
+        Logs statistics for each score.
+        """
+        self.logger.info(f"##### Iter {self.iter} : Score #####")
+        stage_dir = self.get_score_dir()
+        stage_dir.mkdir(exist_ok=True, parents=True)
+
+        df = pd.read_csv(str(self.get_sample_dir() / 'sample_unique.csv'))
+        new_df = self.score_df(df, 'smiles')
+        new_df['random_smiles'] = df['random_smiles'].tolist()
+        new_df.sort_values('total', inplace=True, ascending=False)
+        new_df.to_csv(str(stage_dir / 'score.csv'), index=None)
 
         _tag_done(stage_dir)
     
