@@ -40,6 +40,8 @@ scores:
         - 24.0
         - 24.0
       exec_path: /global/home/groups/fc_armada2/conda_envs/unidock/bin/unidock
+    normalizer:
+      name: Identity
   qed:
     name: QED
     start_iter: 0
