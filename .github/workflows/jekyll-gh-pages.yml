@@ -33,7 +33,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Install the package in editable mode with dev extras, as in docs/README.md
-          pip install -e ".[docs]" --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[docs]" --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Build Sphinx HTML docs (make html)
         working-directory: docs
