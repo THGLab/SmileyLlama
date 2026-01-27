@@ -47,5 +47,14 @@ dev = [
   "autodoc_pydantic>=1.8.0",
 ]
 
+docs = [
+  "sphinx>=5.0.0",
+  "sphinx-rtd-theme>=1.0.0",
+  "sphinx-autodoc-typehints>=1.19.0",
+  "autodoc_pydantic>=1.8.0",
+  "torch",
+  "transformers",
+  "peft"
+]
 [tool.setuptools.packages.find]
 where = ["src"]
