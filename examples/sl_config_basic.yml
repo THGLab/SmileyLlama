@@ -1,7 +1,7 @@
-directory: '.'
+directory: './test_run'
 niters: 20
-model_path: /global/scratch/users/ericwangyz/smiley-enamine/model-1B/model/merged
-num_samples_per_iter: 8000
+model_path: /global/scratch/users/ericwangyz/smiley-enamine/model-1B
+num_samples_per_iter: 512
 user_prompt_properties:
   - High SARS2PRO
 remove_iter_model: true
@@ -12,7 +12,7 @@ scores:
     end_iter: -1
     weight: 0.5
     parameters:
-      protein: /global/scratch/users/ericwangyz/smiley-enamine/model-1B-dpo-qed/mpro.pdb
+      protein: ./mpro.pdb
       box_center:
         - -21.0
         - -12.0
@@ -21,27 +21,9 @@ scores:
         - 24.0
         - 24.0
         - 24.0
-      exec_path: /global/home/groups/fc_armada2/conda_envs/unidock/bin/unidock
+      exec_path: /global/scratch/users/ericwangyz/conda_envs/unidock/bin/unidock
     normalizer:
       name: Negate
-  dock_offtarget:
-    name: UniDock
-    start_iter: 0
-    end_iter: -1
-    weight: 0.5
-    parameters:
-      protein: /global/scratch/users/ericwangyz/smiley-enamine/model-1B-dpo-qed/mpro.pdb
-      box_center:
-        - -21.0
-        - -12.0
-        - -29.0
-      box_size:
-        - 24.0
-        - 24.0
-        - 24.0
-      exec_path: /global/home/groups/fc_armada2/conda_envs/unidock/bin/unidock
-    normalizer:
-      name: Identity
   qed:
     name: QED
     start_iter: 0
