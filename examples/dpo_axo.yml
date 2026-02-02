@@ -25,6 +25,7 @@ gradient_checkpointing_kwargs:
   use_reentrant: false
 
 overrides_of_model_config:
+  rope_theta: 500000.0
   rope_scaling:
       factor: 1.0
       low_freq_factor: 1.0
