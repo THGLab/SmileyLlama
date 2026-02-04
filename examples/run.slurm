@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH -J llama_ft
+#SBATCH -J SL
 #SBATCH -N 1
-#SBATCH -p savio3_gpu
-#SBATCH -A co_armada2
-#SBATCH -q armada2_gpu3_normal
-#SBATCH --gres=gpu:A40:4
-#SBATCH --time=70:00:00
+#SBATCH -p es1
+#SBATCH -A lr_ninjaone
+#SBATCH --qos=condo_ninjaone_es1
+#SBATCH --gres=gpu:A40:1
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=16
 #SBATCH --output="slurm-%A.out"
 
 source /global/home/users/ericwangyz/env/llama.env

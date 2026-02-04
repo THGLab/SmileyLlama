@@ -67,3 +67,4 @@ last_run_prepared/
 
 # Sphinx build files
 docs/_build/
+examples/test_run*

@@ -1,4 +1,4 @@
-directory: './test_run'
+directory: './test_run_3'
 niters: 20
 model_path: /global/scratch/users/ericwangyz/smiley-enamine/model-1B
 num_samples_per_iter: 512
