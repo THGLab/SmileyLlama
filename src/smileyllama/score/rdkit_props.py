@@ -2,7 +2,7 @@ __all__ = [
     'NumHBD', 'NumHBA', 'MolWt', 'LogP', 'NumRotBonds', 'TPSA',
     'FractionCSP3', 'QED', 'SAScore', 'NumHeavyAtoms', 'NumAliphaticRings',
     'NumAromaticRings', 'NumQEDStructureAlerts', 'MaxRingSize', 'MinRingSize',
-    'HeteroAtomsFraction', 'Similarity', 'SubstructureMatch'
+    'HeteroAtomsFraction', 'Similarity', 'SubstructureMatch', 'EsolLogS'
 ]
 
 from typing import Union, Optional
@@ -230,7 +230,35 @@ class QED(Score):
             QED score (0.0 to 1.0).
         """
         return rdQED.qed(mol)
-    
+
+@register("rdkit_scores")
+class EsolLogS(Score):
+    """ESOL predicted aqueous solubility (log mol/L)."""
+    name_in_prompt = 'ESOL logS'
+
+    @classmethod
+    @accept_smiles
+    def compute(cls, mol: Chem.Mol) -> Optional[float]:
+        """Compute ESOL logS.
+        
+        Parameters
+        ----------
+        mol : str or rdkit.Chem.Mol
+            Molecule to score, either as a SMILES string or RDKit
+            molecule object.
+        
+        Returns
+        -------
+        float
+            ESOL logS (log mol/L).
+        """
+        logP = Descriptors.MolLogP(mol)
+        mw = Descriptors.MolWt(mol)
+        rb = Descriptors.NumRotatableBonds(mol)
+        n_heavy = mol.GetNumHeavyAtoms()
+        ar = sum(1 for a in mol.GetAtoms() if a.GetIsAromatic()) / n_heavy if n_heavy else 0
+        return 0.16 - 0.63 * logP - 0.0062 * mw + 0.066 * rb - 0.74 * ar
+
 
 @register("rdkit_scores")
 class SAScore(Score):
