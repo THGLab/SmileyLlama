@@ -6,6 +6,7 @@ from .rdkit_props import *
 from .iminer_props import *
 from .vina import *
 from .normalizer import *
+from .clogs import *
 
 from .registry import REGISTRY
 
