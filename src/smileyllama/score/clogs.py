@@ -1,4 +1,6 @@
-import os, math
+__all__ = ['CLogS']
+
+import os, math, subprocess
 from typing import Optional, List
 from pathlib import Path
 
@@ -12,8 +14,8 @@ class CLogS(Score):
     """Score for aqueous solubility (cLogS) using the clogs_alteri executable.
 
     Computes cLogS values for a list of SMILES by writing them to a .smi file,
-    invoking the clogs_alteri tool (which modifies the file in-place to append
-    tab-separated cLogS values), and parsing the results.
+    invoking the clogs_alteri tool, and parsing the tab-separated results
+    from stdout.
     """
 
     def __init__(
@@ -51,16 +53,17 @@ class CLogS(Score):
             for smi in smiles:
                 f.write(f'{smi}\n')
 
-    def parse_results(self, path: os.PathLike, n: int) -> np.ndarray:
-        """Parse cLogS results from the modified .smi file.
+    def parse_results(self, stdout: str, n: int) -> np.ndarray:
+        """Parse cLogS results from stdout of clogs_alteri.
 
-        After execution, the file has a header line ``SMILES\\tcLogS`` followed
-        by tab-separated SMILES and score lines.
+        The stdout has a header line ``SMILES\\tcLogS`` followed by
+        tab-separated SMILES and score lines. Lines with ``ERROR``
+        are treated as failures (NaN).
 
         Parameters
         ----------
-        path : os.PathLike
-            Path to the results file (modified in-place by clogs_alteri).
+        stdout : str
+            Captured stdout from the clogs_alteri executable.
         n : int
             Expected number of results.
 
@@ -70,21 +73,17 @@ class CLogS(Score):
             Array of cLogS scores. NaN for any lines that failed to parse.
         """
         scores = [math.nan] * n
-        try:
-            with open(path) as f:
-                lines = f.readlines()
-            # first line is the header "SMILES\tcLogS"
-            for i, line in enumerate(lines[1:]):
-                if i >= n:
-                    break
-                parts = line.strip().split('\t')
-                if len(parts) >= 2:
-                    try:
-                        scores[i] = float(parts[1])
-                    except ValueError:
-                        pass
-        except FileNotFoundError:
-            pass
+        lines = stdout.strip().split('\n')
+        # first line is the header "SMILES\tcLogS"
+        for i, line in enumerate(lines[1:]):
+            if i >= n:
+                break
+            parts = line.strip().split('\t')
+            if len(parts) >= 2 and 'ERROR' not in parts[1]:
+                try:
+                    scores[i] = float(parts[1])
+                except ValueError:
+                    pass
         return np.array(scores)
 
     def compute_batch(self, smiles: List[str]) -> np.ndarray:
@@ -102,8 +101,11 @@ class CLogS(Score):
         """
         smi_path = self.wdir / 'input.smi'
         self.write_smiles_file(smiles, smi_path)
-        safe_run_command([self.exec, str(smi_path)])
-        return self.parse_results(smi_path, len(smiles))
+        result = subprocess.run(
+            [self.exec, str(smi_path)],
+            capture_output=True, text=True
+        )
+        return self.parse_results(result.stdout, len(smiles))
 
     def compute(self, smiles: str) -> float:
         """Compute cLogS score for a single molecule.
