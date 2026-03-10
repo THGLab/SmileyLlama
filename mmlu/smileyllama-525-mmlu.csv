@@ -1,63 +1,63 @@
-category,accuracy,std_error
-MMLU,0.6533,0.0038
-Humanities,0.5996,0.0067
-Formal Logic,0.4206,0.0442
-High School European History,0.7636,0.0332
-High School Us History,0.8529,0.0249
-High School World History,0.8439,0.0236
-International Law,0.8182,0.0352
-Jurisprudence,0.7407,0.0424
-Logical Fallacies,0.8405,0.0288
-Moral Disputes,0.7399,0.0236
-Moral Scenarios,0.4123,0.0165
-Philosophy,0.7074,0.0258
-Prehistory,0.7191,0.025
-Professional Law,0.4778,0.0128
-World Religions,0.8246,0.0292
-Other,0.729,0.0076
-Business Ethics,0.71,0.0456
-Clinical Knowledge,0.7358,0.0271
-College Medicine,0.6936,0.0351
-Global Facts,0.32,0.0469
-Human Aging,0.6951,0.0309
-Management,0.8447,0.0359
-Marketing,0.8718,0.0219
-Medical Genetics,0.79,0.0409
-Miscellaneous,0.8378,0.0132
-Nutrition,0.7745,0.0239
-Professional Accounting,0.5071,0.0298
-Professional Medicine,0.75,0.0263
-Virology,0.494,0.0389
-Social Sciences,0.7481,0.0077
-Econometrics,0.5175,0.047
-High School Geography,0.7929,0.0289
-High School Government And Politics,0.8601,0.025
-High School Macroeconomics,0.6333,0.0244
-High School Microeconomics,0.7227,0.0291
-High School Psychology,0.833,0.016
-Human Sexuality,0.7786,0.0364
-Professional Psychology,0.7026,0.0185
-Public Relations,0.6545,0.0455
-Security Studies,0.7469,0.0278
-Sociology,0.8657,0.0241
-Us Foreign Policy,0.86,0.0349
-STEM,0.5664,0.0085
-Abstract Algebra,0.35,0.0479
-Anatomy,0.6963,0.0397
-Astronomy,0.7303,0.0361
-College Biology,0.7917,0.034
-College Chemistry,0.41,0.0494
-College Computer Science,0.54,0.0501
-College Mathematics,0.3,0.0461
-College Physics,0.4412,0.0494
-Computer Security,0.77,0.0423
-Conceptual Physics,0.5872,0.0322
-Electrical Engineering,0.6483,0.0398
-Elementary Mathematics,0.4656,0.0257
-High School Biology,0.7806,0.0235
-High School Chemistry,0.5517,0.035
-High School Computer Science,0.76,0.0429
-High School Mathematics,0.4148,0.03
-High School Physics,0.4503,0.0406
-High School Statistics,0.5046,0.0341
-Machine Learning,0.5179,0.0474
+category,accuracy,std_error,n
+MMLU,0.6533,0.0038,14042
+Humanities,0.5996,0.0067,4705
+Formal Logic,0.4206,0.0442,126
+High School European History,0.7636,0.0332,165
+High School Us History,0.8529,0.0249,204
+High School World History,0.8439,0.0236,237
+International Law,0.8182,0.0352,121
+Jurisprudence,0.7407,0.0424,108
+Logical Fallacies,0.8405,0.0288,163
+Moral Disputes,0.7399,0.0236,346
+Moral Scenarios,0.4123,0.0165,895
+Philosophy,0.7074,0.0258,311
+Prehistory,0.7191,0.025,324
+Professional Law,0.4778,0.0128,1534
+World Religions,0.8246,0.0292,171
+Other,0.729,0.0076,3107
+Business Ethics,0.71,0.0456,100
+Clinical Knowledge,0.7358,0.0271,265
+College Medicine,0.6936,0.0351,173
+Global Facts,0.32,0.0469,100
+Human Aging,0.6951,0.0309,223
+Management,0.8447,0.0359,103
+Marketing,0.8718,0.0219,234
+Medical Genetics,0.79,0.0409,100
+Miscellaneous,0.8378,0.0132,783
+Nutrition,0.7745,0.0239,306
+Professional Accounting,0.5071,0.0298,282
+Professional Medicine,0.75,0.0263,272
+Virology,0.494,0.0389,166
+Social Sciences,0.7481,0.0077,3077
+Econometrics,0.5175,0.047,114
+High School Geography,0.7929,0.0289,198
+High School Government And Politics,0.8601,0.025,193
+High School Macroeconomics,0.6333,0.0244,390
+High School Microeconomics,0.7227,0.0291,238
+High School Psychology,0.833,0.016,545
+Human Sexuality,0.7786,0.0364,131
+Professional Psychology,0.7026,0.0185,612
+Public Relations,0.6545,0.0455,110
+Security Studies,0.7469,0.0278,245
+Sociology,0.8657,0.0241,201
+Us Foreign Policy,0.86,0.0349,100
+STEM,0.5664,0.0085,3153
+Abstract Algebra,0.35,0.0479,100
+Anatomy,0.6963,0.0397,135
+Astronomy,0.7303,0.0361,152
+College Biology,0.7917,0.034,144
+College Chemistry,0.41,0.0494,100
+College Computer Science,0.54,0.0501,100
+College Mathematics,0.3,0.0461,100
+College Physics,0.4412,0.0494,102
+Computer Security,0.77,0.0423,100
+Conceptual Physics,0.5872,0.0322,235
+Electrical Engineering,0.6483,0.0398,145
+Elementary Mathematics,0.4656,0.0257,378
+High School Biology,0.7806,0.0235,310
+High School Chemistry,0.5517,0.035,203
+High School Computer Science,0.76,0.0429,100
+High School Mathematics,0.4148,0.03,270
+High School Physics,0.4503,0.0406,151
+High School Statistics,0.5046,0.0341,216
+Machine Learning,0.5179,0.0474,112
