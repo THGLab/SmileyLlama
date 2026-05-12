@@ -45,6 +45,7 @@ venv/
 .idea/
 *.swp
 *.swo
+.cursor/
 
 # OS
 .DS_Store
@@ -59,3 +60,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp 
+
+tests/_test*
+last_run_prepared/
+
+# Sphinx build files
+docs/_build/
+examples/test_run*

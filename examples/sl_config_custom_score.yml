@@ -1,0 +1,70 @@
+directory: '.'
+niters: 40
+model_path: /global/scratch/users/ericwangyz/smiley-enamine/model-1B/model/merged
+plugin: /global/scratch/users/ericwangyz/smiley-enamine/gbsa_easybfe.py
+num_samples_per_iter: 2000
+user_prompt_properties:
+  - High SARS2PRO
+remove_iter_model: true
+scores:
+  dock:
+    name: UniDock
+    start_iter: 0
+    end_iter: 10
+    weight: 0.5
+    parameters:
+      protein: /global/scratch/users/ericwangyz/smiley-enamine/mpro_amber.pdb
+      box_center:
+        - -21.0
+        - -12.0
+        - -29.0
+      box_size:
+        - 24.0
+        - 24.0
+        - 24.0
+      exec_path: /global/home/groups/fc_armada2/conda_envs/unidock/bin/unidock
+    normalizer:
+      name: Negate
+  dock_2:
+    name: UniDock
+    start_iter: 10
+    end_iter: -1
+    weight: 0.0
+    parameters:
+      protein: /global/scratch/users/ericwangyz/smiley-enamine/mpro_amber.pdb
+      box_center:
+        - -21.0
+        - -12.0
+        - -29.0
+      box_size:
+        - 24.0
+        - 24.0
+        - 24.0
+      exec_path: /global/home/groups/fc_armada2/conda_envs/unidock/bin/unidock
+    normalizer:
+      name: Negate
+  gbsa:
+    name: GBSAEasyBFE
+    start_iter: 10
+    end_iter: -1
+    weight: 0.1
+    dependencies: [dock_2]
+    parameters:
+      protein: /global/scratch/users/ericwangyz/smiley-enamine/mpro_amber.pdb
+      env: ~/env/easybfe_safe.env
+    normalizer:
+      name: Negate
+  qed:
+    name: QED
+    start_iter: 0
+    end_iter: -1
+    weight: 1.0
+    parameters: {}
+    normalizer:
+      name: Identity
+rl_config:
+  algorithm: dpo
+  config_file: ./dpo_axo.yml
+  dpo_num_pairs_per_smiles: 2
+  dpo_score_margin: 0.0
+  dpo_use_random_smiles: false

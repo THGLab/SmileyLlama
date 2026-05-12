@@ -1,0 +1,40 @@
+directory: './test_run_3'
+niters: 20
+model_path: /global/scratch/users/ericwangyz/smiley-enamine/model-1B
+num_samples_per_iter: 512
+user_prompt_properties:
+  - High SARS2PRO
+remove_iter_model: true
+scores:
+  dock:
+    name: UniDock
+    start_iter: 0
+    end_iter: -1
+    weight: 0.5
+    parameters:
+      protein: ./mpro.pdb
+      box_center:
+        - -21.0
+        - -12.0
+        - -29.0
+      box_size:
+        - 24.0
+        - 24.0
+        - 24.0
+      exec_path: /global/scratch/users/ericwangyz/conda_envs/unidock/bin/unidock
+    normalizer:
+      name: Negate
+  qed:
+    name: QED
+    start_iter: 0
+    end_iter: -1
+    weight: 1.0
+    parameters: {}
+    normalizer:
+      name: Identity
+rl_config:
+  algorithm: dpo
+  config_file: ./dpo_axo.yml
+  dpo_num_pairs_per_smiles: 4
+  dpo_score_margin: 0.0
+  use_random_smiles: false

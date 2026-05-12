@@ -1,0 +1,60 @@
+[build-system]
+
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smileyllama"
+version = "0.2.0"
+description = "SmileyLlama: Modifying Large Language Models for Directed Chemical Space Exploration"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Joe C. Cavanagh", email = "jmcavanagh@berkeley.edu"},
+  {name = "Eric Wang", email = "ericwangyz@berkeley.edu"}
+]
+
+
+dependencies = [
+  "tqdm",
+  "pydantic",
+  "numpy",
+  "pandas",
+  "scipy",
+  "gemmi",
+  "rdkit",
+  "ruamel.yaml",
+  "meeko==0.7.1",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Linux",
+]
+
+[project.scripts]
+sl = "smileyllama.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "sphinx>=5.0.0",
+  "sphinx-rtd-theme>=1.0.0",
+  "sphinx-autodoc-typehints>=1.19.0",
+  "autodoc_pydantic>=1.8.0",
+]
+
+docs = [
+  "sphinx>=5.0.0",
+  "sphinx-rtd-theme>=1.0.0",
+  "sphinx-autodoc-typehints>=1.19.0",
+  "autodoc_pydantic>=1.8.0",
+  "torch",
+  "transformers",
+  "peft"
+]
+[tool.setuptools.packages.find]
+where = ["src"]
